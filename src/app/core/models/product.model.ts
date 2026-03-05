@@ -19,6 +19,7 @@ export interface ApiResponse<T> {
 export interface CartItem {
   product: Product;
   quantity: number;
+  freeQuantity: number;
   subtotal: number;
 }
 
@@ -33,6 +34,10 @@ export interface Sale {
   items: SaleItem[];
   quantity: number;
   created_at: string;
+  updated_at:string;
+  sold_to: string;
+  status?: string;
+  is_deleted?: boolean;
 }
 
 export interface SaleItem {
@@ -44,6 +49,7 @@ export interface SaleItem {
   price: number;
   subtotal: number;
   sale_price: number; 
+  free_item:number
 }
 
 export interface DashboardStats {

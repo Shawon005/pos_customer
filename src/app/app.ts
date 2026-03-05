@@ -6,7 +6,8 @@ import { ToastContainerComponent } from './shared/components/toast-container.com
 import { BottomNavComponent } from './shared/components/bottom-nav.component';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { AuthService } from './core/services/auth.service';
-import { LocationService } from './core/services/location.service';
+import { LocationPermissionResult, LocationService } from './core/services/location.service';
+import { NotificationService } from './core/services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -35,29 +36,44 @@ import { LocationService } from './core/services/location.service';
   styles: [`
     .app-container {
       min-height: 100vh;
-      background: #f8f9fa;
+      // background: #f8f9fa;
     }
   `]
 })
 export class App implements OnInit {
   constructor(
     private authService: AuthService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
-    // Initialize location tracking if authenticated
     if (this.authService.isAuthenticated()) {
-      this.locationService.requestPermissionAndStartTracking();
+      this.enforceLocationPermission();
     }
 
-    // Subscribe to auth changes to manage location tracking
     this.authService.authState$.subscribe(authState => {
       if (authState.isAuthenticated) {
-        this.locationService.requestPermissionAndStartTracking();
+        this.enforceLocationPermission();
       } else {
         this.locationService.stopTracking();
       }
     });
+  }
+
+  private async enforceLocationPermission(): Promise<void> {
+    const locationPermissionResult: LocationPermissionResult =
+      await this.locationService.ensurePermissionAndStartTracking();
+
+    if (locationPermissionResult === 'denied') {
+      this.locationService.stopTracking();
+      this.notificationService.error('Location permission is required. You are still logged in.');
+      return;
+    }
+
+    if (locationPermissionResult === 'unavailable') {
+      this.locationService.stopTracking();
+      this.notificationService.warning('Unable to get location. Please enable GPS and try again.');
+    }
   }
 }

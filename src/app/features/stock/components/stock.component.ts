@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
@@ -51,7 +51,7 @@ import { NotificationService } from '../../../core/services/notification.service
             </div>
 
             <div class="product-info">
-              <h3>{{ product.product_name }}</h3>
+              <h3>{{product.product_name}}</h3>
               <p class="sku">SKU: {{ product.sku }}</p>
               <p class="category">{{ product.category }}</p>
             </div>
@@ -85,7 +85,7 @@ import { NotificationService } from '../../../core/services/notification.service
       padding-bottom: 90px;
       margin-bottom:60px;
       min-height: 100vh;
-      background: #f8f9fa;
+      //background:rgb(2, 2, 2);
     }
 
     .stock-header {
@@ -177,7 +177,7 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .stock-card {
-      background: white;
+      background: rgb(41,40,40);
       border-radius: 12px;
       padding: 12px;
       display: grid;
@@ -186,6 +186,7 @@ import { NotificationService } from '../../../core/services/notification.service
       align-items: start;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       transition: all 0.3s ease;
+      border:1px solid #f7941d;
     }
 
     .stock-card:active {
@@ -197,7 +198,7 @@ import { NotificationService } from '../../../core/services/notification.service
       width: 80px;
       height: 80px;
       border-radius: 8px;
-      background: #f8f9fa;
+      background:rgb(10, 10, 10);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -222,7 +223,7 @@ import { NotificationService } from '../../../core/services/notification.service
     .product-info h3 {
       margin: 0 0 4px 0;
       font-size: 16px;
-      color: #333;
+      color: #ffffff;
       font-weight: 600;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -264,7 +265,7 @@ import { NotificationService } from '../../../core/services/notification.service
     .value {
       font-size: 14px;
       font-weight: 600;
-      color: #333;
+      color: #ffffff;
     }
 
     .low-stock {
@@ -331,40 +332,44 @@ export class StockComponent implements OnInit {
   temp: any;
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.loadProducts();
+  ngOnInit(): void {
+    this.loadProducts();
     // this.loadCategories();
   }
 
-  private async loadProducts(): Promise<void> {
-    await this.apiService.getCustomerStocks().subscribe({
+  private loadProducts(): void {
+    this.isLoading = true;
+    this.apiService.getCustomerStocks().subscribe({
       next: (data) => {
         this.temp = data;
-        this.products = this.temp.data;
+        this.products = this.temp?.data ?? [];
         this.isLoading = false;
         this.applyFilters();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading products:', error);
         this.notificationService.error('Failed to load products');
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  private loadCategories(): void {
-    this.apiService.getStockCategories().subscribe({
-      next: (data) => {
-        this.categories = data;
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-      }
-    });
-  }
+  // private loadCategories(): void {
+  //   this.apiService.getStockCategories().subscribe({
+  //     next: (data) => {
+  //       this.categories = data;
+  //     },
+  //     error: (error) => {
+  //       console.error('Error loading categories:', error);
+  //     }
+  //   });
+  // }
 
   onSearch(): void {
     this.applyFilters();

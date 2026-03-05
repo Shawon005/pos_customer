@@ -1,31 +1,12 @@
-export interface CapacitorConfig {
-  appId: string;
-  appName: string;
-  webDir: string;
-  server?: {
-    androidScheme: string;
-    iosScheme: string;
-    hostname: string;
-  };
-  plugins?: {
-    SplashScreen?: {
-      launchAutoHide: boolean;
-      splashImmersive: boolean;
-    };
-    CapacitorCookies?: {
-      enabled: boolean;
-    };
-  };
-}
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.pos.customer',
-  appName: 'POS Customer',
+  appId: 'com.nicksr.app',
+  appName: 'NICK SR APP',
   webDir: 'dist/POS-Customer/browser',
   server: {
-    androidScheme: 'https',
-    iosScheme: 'https',
-    hostname: 'localhost'
+    url: 'https://app.nickbd.com',
+    cleartext: false
   },
   plugins: {
     SplashScreen: {

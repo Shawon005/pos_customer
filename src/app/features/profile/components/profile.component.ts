@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Customer } from '../../../core/models/auth.model';
+import { SunmiPrinterService } from '../../../core/services/sunmi-printer.service';
 
 @Component({
   selector: 'app-profile',
@@ -79,8 +80,55 @@ import { Customer } from '../../../core/models/auth.model';
           </button>
         </div>
 
-        <!-- App Settings -->
         <div class="section-card">
+          <h3>Bluetooth Printer</h3>
+
+          <p class="printer-note" *ngIf="!isNativeAndroid">
+            Printer setup is available only in Android app.
+          </p>
+
+          <div class="form-group" *ngIf="isNativeAndroid">
+            <label for="printer-device">Select Device</label>
+            <select
+              id="printer-device"
+              class="form-input"
+              [(ngModel)]="selectedPrinterAddress"
+            >
+              <option value="">Select paired bluetooth printer</option>
+              <option *ngFor="let device of pairedPrinters" [value]="device.address">
+                {{ device.name }} ({{ device.address }})
+              </option>
+            </select>
+          </div>
+
+          <div class="printer-actions" *ngIf="isNativeAndroid">
+            <button
+              (click)="scanPairedPrinters()"
+              [disabled]="isScanningPrinters"
+              class="btn-secondary-inline"
+              type="button"
+            >
+              <span *ngIf="!isScanningPrinters">Scan Devices</span>
+              <span *ngIf="isScanningPrinters" class="spinner-dark"></span>
+            </button>
+            <button
+              (click)="connectSelectedPrinter()"
+              [disabled]="isConnectingPrinter || !selectedPrinterAddress"
+              class="btn-primary"
+              type="button"
+            >
+              <span *ngIf="!isConnectingPrinter">Connect & Save</span>
+              <span *ngIf="isConnectingPrinter" class="spinner"></span>
+            </button>
+          </div>
+
+          <p class="printer-status" *ngIf="savedPrinterLabel">
+            Saved printer: {{ savedPrinterLabel }}
+          </p>
+        </div>
+
+        <!-- App Settings -->
+        <!-- <div class="section-card">
           <h3>App Settings</h3>
 
           <div class="setting-item">
@@ -98,7 +146,7 @@ import { Customer } from '../../../core/models/auth.model';
             </div>
             <input type="checkbox" [(ngModel)]="notificationsEnabled" class="toggle" />
           </div>
-        </div>
+        </div> -->
 
         <!-- Actions -->
         <div class="actions-section">
@@ -141,7 +189,7 @@ import { Customer } from '../../../core/models/auth.model';
     }
 
     .profile-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg,rgb(46, 44, 40) 0%,rgb(0, 0, 0) 100%);
       border-radius: 12px;
       padding: 24px;
       color: white;
@@ -185,7 +233,7 @@ import { Customer } from '../../../core/models/auth.model';
     }
 
     .section-card {
-      background: white;
+      background: rgb(41,40,40);
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -194,7 +242,7 @@ import { Customer } from '../../../core/models/auth.model';
     .section-card h3 {
       margin: 0 0 16px 0;
       font-size: 18px;
-      color: #333;
+      color: #ffffff;
       font-weight: 600;
     }
 
@@ -206,7 +254,7 @@ import { Customer } from '../../../core/models/auth.model';
       display: block;
       margin-bottom: 6px;
       font-size: 13px;
-      color: #333;
+      color: #ffffff;
       font-weight: 500;
     }
 
@@ -266,6 +314,50 @@ import { Customer } from '../../../core/models/auth.model';
       align-items: center;
       padding: 12px 0;
       border-bottom: 1px solid #e0e0e0;
+    }
+
+    .printer-note {
+      margin: 0;
+      font-size: 13px;
+      color: #ddd;
+    }
+
+    .printer-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-secondary-inline {
+      flex: 1;
+      padding: 12px;
+      background: #f0f0f0;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary-inline:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .printer-status {
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: #e3e3e3;
+    }
+
+    .spinner-dark {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
     .setting-item:last-child {
@@ -352,6 +444,12 @@ import { Customer } from '../../../core/models/auth.model';
   `]
 })
 export class ProfileComponent implements OnInit {
+  isNativeAndroid = false;
+  pairedPrinters: Array<{ name: string; address: string }> = [];
+  selectedPrinterAddress = '';
+  savedPrinterLabel = '';
+  isScanningPrinters = false;
+  isConnectingPrinter = false;
   customer: Customer | null = null;
   oldPassword = '';
   newPassword = '';
@@ -363,11 +461,72 @@ export class ProfileComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private notificationService: NotificationService,
+    private printerService: SunmiPrinterService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.customer = this.authService.getCustomer();
+    this.isNativeAndroid = this.printerService.isNativeAndroid();
+    this.selectedPrinterAddress = this.printerService.getSelectedRongtaAddress();
+    this.updateSavedPrinterLabel();
+    if (this.isNativeAndroid) {
+      this.scanPairedPrinters();
+    }
+  }
+
+  async scanPairedPrinters(): Promise<void> {
+    if (!this.isNativeAndroid) {
+      return;
+    }
+    console.log('isNativeAndroid:', this.printerService.isNativeAndroid());
+    
+    this.isScanningPrinters = true;
+    try {
+      const devices = await this.printerService.listPairedRongtaDevices();
+      this.pairedPrinters = devices;
+
+      if (!devices.length) {
+        this.notificationService.warning('No paired bluetooth devices found. Pair in Android Settings, then tap Scan Devices.');
+        return;
+      }
+
+      if (this.selectedPrinterAddress && !devices.some(d => d.address === this.selectedPrinterAddress)) {
+        this.selectedPrinterAddress = '';
+      }
+    } catch (error: any) {
+      const message = error?.message || 'Unable to load paired bluetooth devices';
+      this.notificationService.error(message);
+    } finally {
+      this.isScanningPrinters = false;
+    }
+  }
+
+  async connectSelectedPrinter(): Promise<void> {
+    if (!this.selectedPrinterAddress) {
+      this.notificationService.warning('Select a printer device first');
+      return;
+    }
+
+    this.isConnectingPrinter = true;
+    const connected = await this.printerService.connectSelectedRongtaPrinter(this.selectedPrinterAddress);
+    this.isConnectingPrinter = false;
+
+    if (!connected) {
+      this.notificationService.error('Printer connect failed. Check bluetooth and pairing.');
+      return;
+    }
+
+    const matched = this.pairedPrinters.find(d => d.address === this.selectedPrinterAddress);
+    this.printerService.setSelectedRongtaPrinter(this.selectedPrinterAddress, matched?.name || 'Rongta Printer');
+    this.updateSavedPrinterLabel();
+    this.notificationService.success('Printer connected and saved');
+  }
+
+  private updateSavedPrinterLabel(): void {
+    const savedName = this.printerService.getSelectedRongtaName();
+    const savedAddress = this.printerService.getSelectedRongtaAddress();
+    this.savedPrinterLabel = savedAddress ? `${savedName || 'Rongta Printer'} (${savedAddress})` : '';
   }
 
   changePassword(): void {

@@ -36,7 +36,7 @@ interface NavItem {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      background: white;
+      background: #000000;
       border-top: 1px solid #e0e0e0;
       box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
       height: 70px;
@@ -104,8 +104,8 @@ interface NavItem {
 })
 export class BottomNavComponent implements OnInit {
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/dashboard' },
-    { label: 'Stock', icon: '📦', route: '/stock' },
+    { label: 'Dashboard', icon: '🏦', route: '/dashboard' },
+    { label: 'Stock', icon: '🏭', route: '/stock' },
     { label: 'POS', icon: '🛒', route: '/pos' },
     { label: 'Sales', icon: '📈', route: '/sales' },
     { label: 'Profile', icon: '👤', route: '/profile' }

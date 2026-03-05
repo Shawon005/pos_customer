@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { HttpHeaders } from '@angular/common/http';
 import { map } from 'rxjs/operators';
@@ -22,6 +22,13 @@ export class ApiService {
     headers  :any 
   constructor(private http: HttpClient, private authService: AuthService) {
     
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Authorization': `Bearer ${this.authService.getToken()}`,
+      'Content-Type': 'application/json'
+    });
   }
 
   // Dashboard endpoints
@@ -79,11 +86,41 @@ export class ApiService {
     discount: number;
     payment_method: string;
   }): Observable<Sale> {
-    this.headers = new HttpHeaders({
-        'Authorization': `Bearer ${this.authService.getToken()}`,
-        'Content-Type': 'application/json'
-    });
-    return this.http.post<Sale>(`${environment.apiUrl}/customer/sell`, data, { headers: this.headers });
+    this.headers = this.getAuthHeaders();
+    return this.http.post<Sale>(`${environment.apiUrl}/customer/sale`, data, { headers: this.headers });
+  }
+
+  updateSale(id: number, data: any): Observable<Sale> {
+    const headers = this.getAuthHeaders();
+    return this.http.put<Sale>(`${environment.apiUrl}/customer/sale/${id}`, data, { headers }).pipe(
+      catchError(() =>
+        this.http.post<Sale>(`${environment.apiUrl}/customer/sale/${id}/update`, data, { headers })
+      )
+    );
+  }
+
+  updateSaleStatus(id: number, status: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.put(`${environment.apiUrl}/customer/sale/${id}/status`, { status }, { headers }).pipe(
+      catchError(() =>
+        this.http.put(`${environment.apiUrl}/customer/sale/${id}`, { status }, { headers })
+      ),
+      catchError(() =>
+        this.http.post(`${environment.apiUrl}/customer/sale/${id}/status`, { status }, { headers })
+      )
+    );
+  }
+
+  deleteSale(id: number): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.delete(`${environment.apiUrl}/customer/sale/${id}`, { headers }).pipe(
+      catchError((error) => {
+        if (error?.status === 404) {
+          return this.http.post(`${environment.apiUrl}/customer/sale/${id}/delete`, {}, { headers });
+        }
+        return throwError(() => error);
+      })
+    );
   }
 
   // Sales endpoints

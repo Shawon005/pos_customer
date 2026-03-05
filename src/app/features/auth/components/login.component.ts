@@ -227,9 +227,9 @@ export class LoginComponent implements OnInit {
 
     this.isLoading = true;
     this.authService.login(this.loginForm.value).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading = false;
-        this.notificationService.success('Login successful!');
+        // this.notificationService.success('Login successful!');
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {

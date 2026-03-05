@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
 import { DashboardStats, SalesChartData } from '../../../core/models/product.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { RouterLink } from "@angular/router";
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,7 +21,7 @@ import { firstValueFrom } from 'rxjs';
         <!-- Stats Cards -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-icon">📦</div>
+            <div class="stat-icon">🏭</div>
             <div class="stat-info">
               <p class="stat-label">Total Stock Items</p>
               <p class="stat-value">{{ stats?.total_stock_items  }}</p>
@@ -103,7 +102,7 @@ import { firstValueFrom } from 'rxjs';
       padding-bottom: 90px;
       margin-bottom:60px;
       min-height: 100vh;
-      background: #f8f9fa;
+      //background:rgb(0, 0, 0);
     }
 
     .dashboard-header {
@@ -114,7 +113,7 @@ import { firstValueFrom } from 'rxjs';
       margin: 0 0 4px 0;
       font-size: 28px;
       font-weight: 700;
-      color: #333;
+      color: #ffffff;
     }
 
     .date {
@@ -136,7 +135,7 @@ import { firstValueFrom } from 'rxjs';
     }
 
     .stat-card {
-      background: white;
+      background:rgb(41, 40, 40);
       border-radius: 12px;
       padding: 16px;
       display: flex;
@@ -144,6 +143,7 @@ import { firstValueFrom } from 'rxjs';
       align-items: flex-start;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       transition: all 0.3s ease;
+      border:1px solid #f7941d;
     }
 
     .stat-card:active {
@@ -168,7 +168,7 @@ import { firstValueFrom } from 'rxjs';
     .stat-label {
       margin: 0;
       font-size: 13px;
-      color: #999;
+      color: #ffffff;
       font-weight: 500;
     }
 
@@ -176,7 +176,7 @@ import { firstValueFrom } from 'rxjs';
       margin: 4px 0 0 0;
       font-size: 20px;
       font-weight: 700;
-      color: #333;
+      color: #ffffff;;
     }
 
     .chart-section {
@@ -245,16 +245,17 @@ import { firstValueFrom } from 'rxjs';
     }
 
     .quick-actions {
-      background: white;
+      background:rgb(41, 40, 40);
       border-radius: 12px;
       padding: 20px 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border:1px solid #f7941d;
     }
 
     .quick-actions h2 {
       margin: 0 0 16px 0;
       font-size: 18px;
-      color: #333;
+      color: #ffffff;
     }
 
     .action-grid {
@@ -270,12 +271,12 @@ import { firstValueFrom } from 'rxjs';
       justify-content: center;
       gap: 8px;
       padding: 20px;
-      background: #f8f9fa;
+      background:rgb(3, 3, 3);
       border-radius: 12px;
       text-decoration: none;
       color: #333;
       transition: all 0.3s ease;
-      border: none;
+      border:1px solid #f7941d;
       cursor: pointer;
     }
 
@@ -317,7 +318,9 @@ export class DashboardComponent implements OnInit {
   temp: any;
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService,private router: Router
+    private notificationService: NotificationService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
   }
@@ -326,18 +329,23 @@ export class DashboardComponent implements OnInit {
        this.loadDashboardData();
   }
 
-private async loadDashboardData(): Promise<void> {
-   this.notificationService.success('Dashboard data loaded successfully');
-  try {
-    const data = await firstValueFrom(this.apiService.getDashboardStats());
-    this.temp = data;
-    this.stats = this.temp.data;
-    console.log('Dashboard stats loaded:', this.stats);
-     
-  } catch (error) {
-    console.error('Error loading dashboard stats:', error);
-    this.notificationService.error('Failed to load dashboard data');
-  }
+private loadDashboardData(): void {
+  this.isLoading = true;
+  this.apiService.getDashboardStats().subscribe({
+    next: (data: any) => {
+      this.temp = data;
+      this.stats = this.temp?.data ?? this.temp;
+      this.isLoading = false;
+      // this.notificationService.success('Dashboard data loaded successfully');
+      this.cdr.detectChanges();
+    },
+    error: (error) => {
+      console.error('Error loading dashboard stats:', error);
+      this.isLoading = false;
+      this.notificationService.error('Failed to load dashboard data');
+      this.cdr.detectChanges();
+    }
+  });
 
 
     // this.apiService.getSalesChart().subscribe({

@@ -1,4 +1,9 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://127.0.0.1:8000/api'
+  apiUrl: 'https://nickbd.com/api',
+  printer: {
+    type: 'rongta' as 'rongta' | 'sunmi' | 'auto',
+    rongtaAddress: '',
+    rongtaNameKeywords: ['RONGTA', 'RP335', 'RP80', 'RP58', 'RP302', 'RP']
+  }
 };

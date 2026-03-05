@@ -1,5 +1,5 @@
 /* Global Styles */
-
+@import 'ngx-toastr/toastr';
 * {
   margin: 0;
   padding: 0;
@@ -12,12 +12,159 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+  --theme-bg: #0a0a0b;
+  --theme-bg-soft: #15171b;
+  --theme-panel: #121418;
+  --theme-panel-2: #1a1d23;
+  --theme-text: #f5f7fa;
+  --theme-text-muted: #a8adb8;
+  --theme-accent: #f7941d;
+  --theme-accent-soft: rgba(247, 148, 29, 0.25);
+  --theme-border: #f7941d;
+  --theme-radius: 14px;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f8f9fa;
-  color: #333;
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(247, 148, 29, 0.16), transparent 58%),
+    radial-gradient(900px 500px at 90% 10%, rgba(247, 148, 29, 0.1), transparent 60%),
+    linear-gradient(170deg, #0b0b0d 0%, #111318 45%, #0b0b0d 100%);
+  color: var(--theme-text);
   line-height: 1.6;
   overflow-x: hidden;
+}
+
+/* Global theme override */
+html,
+body,
+app-root {
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-text) !important;
+}
+
+/* Global page shells */
+.pos-page,
+.sales-page,
+[class$="-page"] {
+  background: transparent !important;
+  color: var(--theme-text) !important;
+}
+
+.pos-page *,
+.sales-page * {
+  color: var(--theme-text) !important;
+}
+
+/* Main card/panel system */
+.card,
+mat-card,
+.mat-card,
+.mat-mdc-card,
+.sale-card,
+.cart-section,
+.result-item,
+.filter-section,
+.modal-content,
+.confirm-modal-content,
+.cart-item,
+[class~="card"],
+[class$="-section"] {
+  background: linear-gradient(135deg, var(--theme-panel) 0%, var(--theme-panel-2) 100%) !important;
+  border: 1px solid var(--theme-border) !important;
+  border-radius: var(--theme-radius) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(247, 148, 29, 0.08) inset !important;
+}
+
+/* Text hierarchy */
+h1, h2, h3, h4, h5, h6,
+label,
+p,
+span,
+small,
+td,
+th,
+li,
+a,
+div {
+  color: var(--theme-text);
+}
+
+.sale-date,
+.item-sku,
+.empty-state,
+.label,
+.result-details {
+  color: var(--theme-text-muted) !important;
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  background: #111319 !important;
+  color: var(--theme-text) !important;
+  border: 1px solid var(--theme-border) !important;
+  border-radius: 10px !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--theme-text-muted) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--theme-accent) !important;
+  box-shadow: 0 0 0 2px var(--theme-accent-soft) !important;
+}
+
+/* Buttons */
+button,
+.btn-primary,
+.btn-action,
+.btn-status,
+.btn-confirm {
+  background: linear-gradient(180deg, #ff9f2d 0%, #f7941d 100%) !important;
+  color: #101217 !important;
+  border: 1px solid var(--theme-accent) !important;
+  /* border-radius: 999px !important; */
+  font-weight: 600 !important;
+}
+
+.btn-secondary,
+.btn-cancel,
+.btn-delete,
+.btn-edit {
+  background: #161922 !important;
+  color: var(--theme-text) !important;
+  border: 1px solid var(--theme-border) !important;
+}
+
+/* Status chips */
+.badge {
+  background: rgba(247, 148, 29, 0.16) !important;
+  color: #ffc074 !important;
+  border: 1px solid var(--theme-border) !important;
+}
+
+/* Keep print receipt readable for actual printing */
+.print-receipt,
+.print-receipt * {
+  color: initial !important;
+}
+
+@media print {
+  .print-receipt,
+  .print-receipt * {
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Touch Device Optimization */
@@ -38,16 +185,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #111319;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #bbb;
+  background: #f7941d;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: #ffa633;
 }
 
 /* Selection Styling */

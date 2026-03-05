@@ -24,9 +24,9 @@ export class AuthService {
   }
 
   private initializeAuth(): void {
-    const token = null;
-    const customer = null;
-    if (token && customer) {
+    const token = this.getStoredToken();
+    const customer = this.getStoredCustomer();
+    if (token) {
       this.authStateSubject.next({
         token,
         customer,
