@@ -21,6 +21,7 @@ interface RongtaPrinterPlugin {
 
 const SunmiPrinter = registerPlugin<SunmiPrinterPlugin>('SunmiPrinter');
 const RongtaPrinter = registerPlugin<RongtaPrinterPlugin>('RongtaPrinter');
+const RongtaPrinting = registerPlugin<RongtaPrinterPlugin>('RongtaPrinting');
 
 @Injectable({
   providedIn: 'root'
@@ -62,22 +63,23 @@ export class SunmiPrinterService {
   }
 
   async listPairedRongtaDevices(): Promise<Array<{ name: string; address: string }>> {
-    // if (!this.isNativeAndroid() || !this.isRongtaPluginAvailable()) {
-    //   return [];
-    // }
+    if (!this.isNativeAndroid() || !this.isRongtaPluginAvailable()) {
+      return [];
+    }
     console.log('Platform:', Capacitor.getPlatform());
-    // try {
-      const result = await RongtaPrinter.listPairedDevices();
+    try {
+      const plugin = this.getRongtaPlugin();
+      const result = await plugin.listPairedDevices();
       console.log('Raw result:', result);
       const rawDevices = result?.devices;
       const normalizedDevices = this.normalizeDevices(rawDevices);
       return normalizedDevices
         .filter((d) => !!d.address)
         .sort((a, b) => a.name.localeCompare(b.name));
-    // } catch (error) {
-    //   console.error('List Rongta paired devices failed:', error);
-    //   return [];
-    // }
+    } catch (error) {
+      console.error('List Rongta paired devices failed:', error);
+      return [];
+    }
   }
   // async listPairedRongtaDevices() {
   //   console.log('Platform:', Capacitor.getPlatform());
@@ -103,7 +105,8 @@ export class SunmiPrinterService {
     }
 
     try {
-      const result = await RongtaPrinter.connect({
+      const plugin = this.getRongtaPlugin();
+      const result = await plugin.connect({
         address: finalAddress,
         nameKeywords: this.rongtaNameKeywords
       });
@@ -137,7 +140,7 @@ export class SunmiPrinterService {
   }
 
   private isRongtaPluginAvailable(): boolean {
-    return Capacitor.isPluginAvailable('RongtaPrinter');
+    return Capacitor.isPluginAvailable('RongtaPrinter') || Capacitor.isPluginAvailable('RongtaPrinting');
   }
 
   private isSunmiPluginAvailable(): boolean {
@@ -174,11 +177,12 @@ export class SunmiPrinterService {
     try {
       const selectedAddress = this.getSelectedRongtaAddress();
       const finalAddress = selectedAddress || this.rongtaAddress || undefined;
-      await RongtaPrinter.connect({
+      const plugin = this.getRongtaPlugin();
+      await plugin.connect({
         address: finalAddress,
         nameKeywords: this.rongtaNameKeywords
       });
-      await RongtaPrinter.printText({
+      await plugin.printText({
         text,
         address: finalAddress,
         nameKeywords: this.rongtaNameKeywords
@@ -188,5 +192,15 @@ export class SunmiPrinterService {
       console.error('Rongta print failed:', error);
       return false;
     }
+  }
+
+  private getRongtaPlugin(): RongtaPrinterPlugin {
+    if (Capacitor.isPluginAvailable('RongtaPrinter')) {
+      return RongtaPrinter;
+    }
+    if (Capacitor.isPluginAvailable('RongtaPrinting')) {
+      return RongtaPrinting;
+    }
+    throw new Error('Rongta plugin is not available on this device');
   }
 }

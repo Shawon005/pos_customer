@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
 import { DashboardStats, SalesChartData } from '../../../core/models/product.model';
 import { NotificationService } from '../../../core/services/notification.service';
-import { RouterLink } from "@angular/router";
+import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { Customer } from '../../../core/models/auth.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,301 +14,57 @@ import { Router } from '@angular/router';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="dashboard">
-      <header class="dashboard-header">
-        <h1>Dashboard</h1>
-        <p class="date">{{ currentDate | date: 'EEE, MMM d, yyyy' }}</p>
+      <header class="profile-card">
+        <div class="avatar">{{ customer?.name?.charAt(0) || 'U' }}</div>
+        <div class="profile-info">
+          <h2>{{ customer?.name || 'User' }}</h2>
+          <p>{{ customer?.email || 'POS Customer' }}</p>
+        </div>
       </header>
 
-      <div class="content">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🏭</div>
-            <div class="stat-info">
-              <p class="stat-label">Total Stock Items</p>
-              <p class="stat-value">{{ stats?.total_stock_items  }}</p>
-            </div>
-          </div>
+      <div class="tiles-grid">
+        <a routerLink="/attendance/action" class="tile"><span>🕒</span><b>Attendance</b></a>
+        <a routerLink="/attendance/details" class="tile"><span>📅</span><b>Attendance Details</b></a>
+        <a routerLink="/stock" class="tile"><span>📦</span><b>Stock</b></a>
+        <a routerLink="/pos" class="tile"><span>🛒</span><b>New Sale</b></a>
+        <a routerLink="/sales" class="tile"><span>📋</span><b>Sales History</b></a>
+        <a routerLink="/reports" class="tile"><span>📊</span><b>Report</b></a>
+        <a routerLink="/profile" class="tile"><span>👷🏻‍♂️</span><b>Profile</b></a>
+         <a routerLink="/login" class="tile"><span>🔒</span><b>Logout</b></a>
+      </div>
 
-          <div class="stat-card">
-            <div class="stat-icon">💰</div>
-            <div class="stat-info">
-              <p class="stat-label">Sales Today</p>
-              <p class="stat-value">৳ {{ stats?.today_sales  }}</p>
-            </div>
-          </div>
+      <div class="summary-strip">
+        <div class="mini"><small>📦 Stock</small><strong>{{ stats?.total_stock_items || 0 }}</strong></div>
+        <div class="mini"><small>💰 Today</small><strong> {{ stats?.today_sales || 0 }}৳</strong></div>
+        <div class="mini"><small>💰 Stock Value</small><strong> {{ stats?.total_stock_value || 0 }}৳</strong></div>
+        <div class="mini low" *ngIf="stats?.low_stock_count"><small>⚠ Low</small><strong>{{ stats?.low_stock_count }}</strong></div>
+      </div>
 
-          <div class="stat-card">
-            <div class="stat-icon">📈</div>
-            <div class="stat-info">
-              <p class="stat-label">Total Stock Value</p>
-              <p class="stat-value">৳ {{ stats?.total_stock_value  }}</p>
-            </div>
-          </div>
-
-          <div class="stat-card warning" *ngIf="stats?.low_stock_count">
-            <div class="stat-icon">⚠️</div>
-            <div class="stat-info">
-              <p class="stat-label">Low Stock Items</p>
-              <p class="stat-value">{{ stats?.low_stock_count }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sales Chart -->
-        <!-- <div class="chart-section" *ngIf="chartData.length > 0">
-          <h2>Sales Trend (Last 7 Days)</h2>
-          <div class="chart-container">
-            <div class="chart-bar" *ngFor="let data of chartData">
-              <div class="bar-label">{{ data.date | date: 'MMM d' }}</div>
-              <div class="bar-wrapper">
-                <div 
-                  class="bar" 
-                  [style.height.%]="(data.sales / maxChartValue) * 100"
-                  [title]="'৳ ' + data.sales"
-                ></div>
-              </div>
-              <div class="bar-value">৳ {{ data.sales | number: '1.0-0' }}</div>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <h2>Quick Actions</h2>
-          <div class="action-grid">
-            <a routerLink="/pos" class="action-btn">
-              <span class="action-icon">🛒</span>
-              <span>New Sale</span>
-            </a>
-            <a routerLink="/stock" class="action-btn">
-              <span class="action-icon">📦</span>
-              <span>View Stock</span>
-            </a>
-            <a routerLink="/sales" class="action-btn">
-              <span class="action-icon">📋</span>
-              <span>Sales History</span>
-            </a>
-            <a routerLink="/reports" class="action-btn">
-              <span class="action-icon">📊</span>
-              <span>Reports</span>
-            </a>
-          </div>
-        </div>
+      <div class="location-card">
+        <div class="location-title">Current Location</div>
+        <div class="location-value">{{ customer?.address || 'Location not set' }}</div>
       </div>
     </div>
   `,
   styles: [`
-    .dashboard {
-      padding: 16px;
-      padding-bottom: 90px;
-      margin-bottom:60px;
-      min-height: 100vh;
-      //background:rgb(0, 0, 0);
-    }
-
-    .dashboard-header {
-      margin-bottom: 24px;
-    }
-
-    .dashboard-header h1 {
-      margin: 0 0 4px 0;
-      font-size: 28px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .date {
-      margin: 0;
-      color: #999;
-      font-size: 14px;
-    }
-
-    .content {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .stat-card {
-      background:rgb(41, 40, 40);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      transition: all 0.3s ease;
-      border:1px solid #f7941d;
-    }
-
-    .stat-card:active {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-card.warning {
-      background: #fffbf0;
-      border-left: 4px solid #f39c12;
-    }
-
-    .stat-icon {
-      font-size: 28px;
-      flex-shrink: 0;
-    }
-
-    .stat-info {
-      flex: 1;
-    }
-
-    .stat-label {
-      margin: 0;
-      font-size: 13px;
-      color: #ffffff;
-      font-weight: 500;
-    }
-
-    .stat-value {
-      margin: 4px 0 0 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;;
-    }
-
-    .chart-section {
-      background: white;
-      border-radius: 12px;
-      padding: 20px 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    }
-
-    .chart-section h2 {
-      margin: 0 0 16px 0;
-      font-size: 18px;
-      color: #333;
-    }
-
-    .chart-container {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-around;
-      height: 180px;
-      gap: 8px;
-    }
-
-    .chart-bar {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .bar-label {
-      font-size: 12px;
-      color: #999;
-      text-align: center;
-      order: 3;
-    }
-
-    .bar-wrapper {
-      flex: 1;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      width: 100%;
-    }
-
-    .bar {
-      width: 100%;
-      max-width: 30px;
-      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-      border-radius: 6px 6px 0 0;
-      min-height: 10px;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .bar:hover {
-      opacity: 0.8;
-    }
-
-    .bar-value {
-      font-size: 11px;
-      color: #667eea;
-      font-weight: 600;
-      order: 2;
-    }
-
-    .quick-actions {
-      background:rgb(41, 40, 40);
-      border-radius: 12px;
-      padding: 20px 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      border:1px solid #f7941d;
-    }
-
-    .quick-actions h2 {
-      margin: 0 0 16px 0;
-      font-size: 18px;
-      color: #ffffff;
-    }
-
-    .action-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 20px;
-      background:rgb(3, 3, 3);
-      border-radius: 12px;
-      text-decoration: none;
-      color: #333;
-      transition: all 0.3s ease;
-      border:1px solid #f7941d;
-      cursor: pointer;
-    }
-
-    .action-btn:active {
-      background: #e8eaf6;
-      transform: scale(0.98);
-    }
-
-    .action-icon {
-      font-size: 28px;
-    }
-
-    .action-btn span:last-child {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    @media (max-width: 480px) {
-      .dashboard {
-        padding: 12px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .action-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
+    .dashboard { padding: 14px; padding-bottom: 90px; min-height: 100vh; background: #000; }
+    .profile-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: #292828; border: 1px solid #f7941d; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.28); margin-bottom: 12px; }
+    .avatar { width: 54px; height: 54px; border-radius: 50%; background: #f7941d; color: #111; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; }
+    .profile-info h2 { margin: 0; color: #fff; font-size: 26px; line-height: 1.1; }
+    .profile-info p { margin: 4px 0 0; color: #bbb; font-size: 13px; }
+    .tiles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tile { background: #ededed; border-radius: 14px; min-height: 92px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.18); border: 1px solid #f7941d; }
+    .tile span { width: 34px; height: 34px; border-radius: 50%; background: #f7d6a8; color: #7f3f00; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .tile b { font-size: 15px; font-weight: 600; }
+    .summary-strip { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .mini { border-radius: 12px; background: #292828; border: 1px solid #f7941d; padding: 10px; color: #fff; text-align: center; }
+    .mini.low { border-color: #ffb84d; box-shadow: inset 0 0 0 1px rgba(255,184,77,0.25); }
+    .mini small { display: block; color: #bbb; font-size: 11px; }
+    .mini strong { font-size: 14px; }
+    .location-card { margin-top: 12px; border-radius: 14px; background: #ededed; border: 1px solid #f7941d; padding: 12px; }
+    .location-title { font-weight: 700; color: #7f3f00; margin-bottom: 6px; }
+    .location-value { font-size: 14px; color: #333; }
+    @media (max-width: 420px) { .profile-info h2 { font-size: 22px; } .tile { min-height: 88px; } .tile b { font-size: 14px; } }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -316,48 +74,38 @@ export class DashboardComponent implements OnInit {
   maxChartValue = 1;
   isLoading = true;
   temp: any;
+  customer: Customer | null = null;
+
   constructor(
     private apiService: ApiService,
     private notificationService: NotificationService,
     private router: Router,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {
-   this.router.routeReuseStrategy.shouldReuseRoute = () => false;
+    this.router.routeReuseStrategy.shouldReuseRoute = () => false;
   }
 
   ngOnInit(): void {
-       this.loadDashboardData();
+    this.customer = this.authService.getCustomer();
+    this.loadDashboardData();
   }
 
-private loadDashboardData(): void {
-  this.isLoading = true;
-  this.apiService.getDashboardStats().subscribe({
-    next: (data: any) => {
-      this.temp = data;
-      this.stats = this.temp?.data ?? this.temp;
-      this.isLoading = false;
-      // this.notificationService.success('Dashboard data loaded successfully');
-      this.cdr.detectChanges();
-    },
-    error: (error) => {
-      console.error('Error loading dashboard stats:', error);
-      this.isLoading = false;
-      this.notificationService.error('Failed to load dashboard data');
-      this.cdr.detectChanges();
-    }
-  });
-
-
-    // this.apiService.getSalesChart().subscribe({
-    //   next: (data) => {
-    //     this.chartData = data;
-    //     this.maxChartValue = Math.max(...data.map(d => d.sales), 1);
-    //     this.isLoading = false;
-    //   },
-    //   error: (error) => {
-    //     console.error('Error loading sales chart:', error);
-    //     this.isLoading = false;
-    //   }
-    // });
+  private loadDashboardData(): void {
+    this.isLoading = true;
+    this.apiService.getDashboardStats().subscribe({
+      next: (data: any) => {
+        this.temp = data;
+        this.stats = this.temp?.data ?? this.temp;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error loading dashboard stats:', error);
+        this.isLoading = false;
+        this.notificationService.error('Failed to load dashboard data');
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

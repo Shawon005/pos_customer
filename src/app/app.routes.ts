@@ -42,6 +42,10 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'attendance',
+    loadChildren: () => import('./features/attendance/attendance.module').then((m) => m.AttendanceModule)
+  },
+  {
     path: 'profile',
     component: ProfileComponent,
     canActivate: [AuthGuard]

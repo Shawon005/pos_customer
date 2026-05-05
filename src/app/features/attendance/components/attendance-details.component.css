@@ -1,0 +1,25 @@
+.attendance-details-page { padding: 16px; padding-bottom: 96px; background: #f6f8fa; min-height: 100vh; }
+.pull-hint { text-align: center; color: #667; font-size: 12px; overflow: hidden; transition: height 0.2s ease; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+h1 { margin: 0; font-size: 24px; }
+.refresh-btn { border: none; border-radius: 8px; padding: 8px 12px; background: #203346; color: #fff; }
+.filter-card,.summary-card,.record-card,.empty-state { background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.filter-card { margin-bottom: 12px; }
+.summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-bottom: 12px; }
+.summary-card { display: flex; flex-direction: column; gap: 4px; }
+.summary-card.full { grid-column: 1 / -1; }
+.summary-card span { color: #667; font-size: 12px; }
+.records { display: grid; gap: 10px; }
+.record-head { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; }
+.badge { padding: 3px 8px; border-radius: 30px; background: #138a56; color: #fff; font-size: 11px; }
+.badge.out { background: #bf360c; }
+.row-item { font-size: 13px; margin: 2px 0; }
+.queue { color: #ad6800; font-weight: 600; }
+.record-image { width: 100%; margin-top: 8px; border-radius: 8px; }
+.empty-state { text-align: center; }
+.skeleton-wrap { display: grid; gap: 10px; }
+.skeleton { border-radius: 10px; background: linear-gradient(90deg,#eceff3 25%,#f7f9fc 37%,#eceff3 63%); background-size: 400% 100%; animation: pulse 1.2s infinite; }
+.skeleton.card { height: 70px; }
+strong { color: rgb(2, 2, 2); font-size: 12px; }
+.skeleton.row { height: 120px; }
+@keyframes pulse { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }

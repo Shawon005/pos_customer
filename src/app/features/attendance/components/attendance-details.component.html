@@ -1,0 +1,51 @@
+<div class="attendance-details-page" (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd()">
+  <div class="pull-hint" [style.height.px]="pullDistance"><span *ngIf="pullDistance > 0">Pull to refresh</span></div>
+
+  <div class="header-row">
+    <h1>Attendance Details</h1>
+    <button class="refresh-btn" (click)="refresh()" [disabled]="loading || syncing">{{ syncing ? 'Syncing...' : 'Refresh' }}</button>
+  </div>
+
+  <div class="filter-card">
+    <label for="month-picker" style="color: black; margin-right: 16px;" >Month</label>
+    <input id="month-picker" type="month" [(ngModel)]="month" (change)="onMonthChange()" />
+  </div>
+
+  <div *ngIf="loading" class="skeleton-wrap">
+    <div class="skeleton card"></div>
+    <div class="skeleton card"></div>
+    <div class="skeleton row"></div>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <div class="summary-grid">
+      <div class="summary-card"><span>Present Days</span><strong>{{ summary.present_days }}</strong></div>
+      <div class="summary-card"><span>Worked Hours</span><strong>{{ summary.worked_hours }}</strong></div>
+      <div class="summary-card"><span>Late Hours</span><strong>{{ summary.late_hours }}</strong></div>
+      <div class="summary-card"><span>Overtime Hours</span><strong>{{ summary.overtime_hours }}</strong></div>
+      <div class="summary-card"><span>Base Salary</span><strong>{{ formatter.toCurrency(summary.base_salary) }}</strong></div>
+      <div class="summary-card"><span>Late Deduction</span><strong>{{ formatter.toCurrency(summary.late_deduction) }}</strong></div>
+      <div class="summary-card"><span>Overtime Pay</span><strong>{{ formatter.toCurrency(summary.overtime_pay) }}</strong></div>
+      <div class="summary-card"><span>Total Salary</span><strong>{{ formatter.toCurrency(summary.total_salary) }}</strong></div>
+      <div class="summary-card full"><span>Attendance Location</span><strong>{{ summary.attendance_location }}</strong></div>
+    </div>
+
+    <div *ngIf="rows.length === 0" class="empty-state">No attendance records found for this month.</div>
+
+    <div class="records" *ngIf="rows.length > 0">
+      <div class="record-card" *ngFor="let row of rows; trackBy: trackByRow">
+        <div class="record-head">
+          <span>{{ formatter.toReadableDate(row.date || row.time) }}</span>
+          <span class="badge" [class.out]="row.type === 'out'">{{ row.type | uppercase }}</span>
+        </div>
+        <div class="row-item">Time: {{ formatter.toReadableTime(row.time || row.date) }}</div>
+        <div class="row-item">Late Minutes: {{ row.late_minutes ?? 0 }}</div>
+        <div class="row-item">Distance: {{ row.distance_meters ?? 0 }}m</div>
+        <div class="row-item">Within Radius: {{ row.within_radius ? 'Yes' : 'No' }}</div>
+        <div class="row-item">Lat/Lng: {{ row.latitude }}, {{ row.longitude }}</div>
+        <div class="row-item">Sync: <span [class.queue]="row.sync_status === 'queued'">{{ row.sync_status || 'synced' }}</span></div>
+        <img *ngIf="row.image_url" [src]="row.image_url" alt="Attendance" class="record-image" />
+      </div>
+    </div>
+  </ng-container>
+</div>

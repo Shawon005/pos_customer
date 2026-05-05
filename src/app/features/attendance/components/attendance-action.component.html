@@ -1,0 +1,12 @@
+<div class="attendance-action-page">
+  <h1>Attendance</h1>
+  <div class="status-card" *ngIf="lastQueueCount > 0"><strong>{{ lastQueueCount }}</strong> record(s) queued offline and waiting to sync.</div>
+  <div class="action-card">
+    <button class="btn secondary" (click)="captureSelfie()" [disabled]="captureLoading || loading">{{ captureLoading ? 'Opening camera...' : 'Capture Selfie (Optional)' }}</button>
+    <img *ngIf="previewImageBase64" [src]="previewImageBase64" alt="Selfie preview" class="preview" />
+    <div class="actions-row mt-4" >
+      <button class="btn in" (click)="submit('in')" [disabled]="loading">{{ loading ? 'Submitting...' : 'Check In' }}</button>
+      <button class="btn out" (click)="submit('out')" [disabled]="loading">{{ loading ? 'Submitting...' : 'Check Out' }}</button>
+    </div>
+  </div>
+</div>

@@ -4,10 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.nicksr.app',
   appName: 'NICK SR APP',
   webDir: 'dist/POS-Customer/browser',
-  server: {
-    url: 'https://app.nickbd.com',
-    cleartext: false
-  },
+ 
   plugins: {
     SplashScreen: {
       launchAutoHide: true,

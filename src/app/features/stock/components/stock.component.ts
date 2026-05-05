@@ -329,7 +329,6 @@ export class StockComponent implements OnInit {
   searchQuery = '';
   selectedCategory = '';
   isLoading = true
-  temp: any;
   constructor(
     private apiService: ApiService,
     private notificationService: NotificationService,
@@ -344,9 +343,20 @@ export class StockComponent implements OnInit {
   private loadProducts(): void {
     this.isLoading = true;
     this.apiService.getCustomerStocks().subscribe({
-      next: (data) => {
-        this.temp = data;
-        this.products = this.temp?.data ?? [];
+      next: (data: any) => {
+        const rawProducts = Array.isArray(data) ? data : (data?.data ?? []);
+        this.products = rawProducts.map((item: any) => ({
+          ...item,
+          category: item.category_name ?? item.category ?? 'Uncategorized',
+          min_stock: item.min_stock ?? 0
+        }));
+        this.categories = Array.from(
+          new Set(
+            this.products
+              .map(p => (p.category || '').trim())
+              .filter(Boolean)
+          )
+        );
         this.isLoading = false;
         this.applyFilters();
         this.cdr.detectChanges();

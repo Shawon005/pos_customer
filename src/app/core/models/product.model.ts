@@ -36,6 +36,8 @@ export interface Sale {
   created_at: string;
   updated_at:string;
   sold_to: string;
+  resaler_address?: string;
+  resaler_phone?: string;
   status?: string;
   is_deleted?: boolean;
 }

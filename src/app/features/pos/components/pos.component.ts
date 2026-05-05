@@ -36,8 +36,7 @@ import { ActivatedRoute, Router } from '@angular/router';
             <div
               *ngFor="let product of searchResults"
               class="result-item"
-              (click)="addToCart(product)"
-            >
+              (click)="addToCart(product)">
               <div class="result-name">{{ product.product_name }}</div>
               <div class="result-details">
                 <span>৳ {{ product.purchase_price | number: '1.0-2' }}</span>
@@ -53,6 +52,12 @@ import { ActivatedRoute, Router } from '@angular/router';
         <div class="cart-section">
           <div>
             <input type="text" placeholder="Retail Buyer Name..." [(ngModel)]="retailBuyerName"   class="search-input form_controll mb-4" style=""/>
+          </div>
+          <div>
+            <input type="text" placeholder="Retail Address..." [(ngModel)]="retailBuyerAddress"   class="search-input form_controll mb-4" style=""/>
+          </div>
+          <div>
+            <input type="text" placeholder="Retail Phone..." [(ngModel)]="retailBuyerPhone"   class="search-input form_controll mb-4" style=""/>
           </div>
           <h2>Cart Items ({{ cart.length }})</h2>
 
@@ -99,19 +104,18 @@ import { ActivatedRoute, Router } from '@angular/router';
               <span>Subtotal:</span>
               <span>৳ {{ cartSubtotal | number: '1.0-2' }}</span>
             </div>
-            <!-- <div class="summary-row">
-              <label for="discount">Discount (%):</label>
+            <div class="summary-row">
+              <label for="discount">Discount Amount:</label>
               <div class="discount-input">
                 <input
                   id="discount"
                   type="number"
-                  [(ngModel)]="discountPercent"
+                  [(ngModel)]="discountInput"
                   (change)="calculateTotal()"
                   min="0"
-                  max="100"
                 />
               </div>
-            </div> -->
+            </div>
             <!-- <div class="summary-row">
               <span>Discount Amount:</span>
               <span>৳ {{ discountAmount | number: '1.0-2' }}</span>
@@ -480,7 +484,9 @@ import { ActivatedRoute, Router } from '@angular/router';
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-
+    .mb-4{
+      margin-bottom: 16px;
+    }
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -508,12 +514,14 @@ export class POSComponent implements OnInit {
   products: Product[] = [];
   searchResults: Product[] = [];
   searchQuery = '';
-  discountPercent = 0;
+  discountInput = 0;
   cartSubtotal = 0;
   discountAmount = 0;
   cartTotal = 0;
   isProcessing = false;
   retailBuyerName: string = '';
+  retailBuyerAddress: string = '';
+  retailBuyerPhone: string = '';
   temp: any;
   lastSaleItems: any[] = [];
   lastSubtotal = 0;
@@ -673,7 +681,7 @@ export class POSComponent implements OnInit {
       if (!parsed?.id || (this.editSaleIdFromRoute && parsed.id !== this.editSaleIdFromRoute)) {
         return;
       }
-
+    console.log('Loaded edit sale payload:', parsed);
       const mappedCart: CartItem[] = (parsed.items || []).map((item: any) => {
         const found = this.products.find(p => p.product_id === item.product_id);
         const price = Number(item.sale_price || found?.purchase_price || 0);
@@ -711,12 +719,14 @@ export class POSComponent implements OnInit {
 
       this.cart = mappedCart;
       this.retailBuyerName = parsed.sold_to || '';
+      this.retailBuyerAddress = parsed.resaler_address || '';
+      this.retailBuyerPhone = parsed.resaler_phone || '';
       this.discountAmount = Number(parsed.discount || 0);
       this.isEditMode = true;
       this.editingSaleId = Number(parsed.id);
       this.updateCartTotal();
       this.cartTotal = Number(parsed.sale_price || this.cartTotal);
-      this.discountPercent = this.cartSubtotal > 0 ? (this.discountAmount / this.cartSubtotal) * 100 : 0;
+      this.discountInput = this.discountAmount;
     } catch (error) {
       console.error('Failed to load edit sale payload', error);
     }
@@ -724,10 +734,12 @@ export class POSComponent implements OnInit {
 
   clearCart(): void {
     this.cart = [];
-    this.discountPercent = 0;
+    this.discountInput = 0;
     this.discountAmount = 0;
     this.cartTotal = 0;
     this.retailBuyerName = '';
+    this.retailBuyerAddress = '';
+    this.retailBuyerPhone = '';
     this.resetEditMode();
     this.updateCartTotal();
   }
@@ -755,7 +767,8 @@ export class POSComponent implements OnInit {
   }
 
   calculateTotal(): void {
-    this.discountAmount = (this.cartSubtotal * this.discountPercent) / 100;
+    const normalizedDiscount = Number(this.discountInput) || 0;
+    this.discountAmount = Math.min(Math.max(normalizedDiscount, 0), this.cartSubtotal);
     this.cartTotal = this.cartSubtotal - this.discountAmount;
   }
 
@@ -784,7 +797,9 @@ export class POSComponent implements OnInit {
       sale_price: this.cartTotal,
       discount: this.discountAmount,
       payment_method: 'cash',
-      sold_to: this.retailBuyerName || ''
+      sold_to: this.retailBuyerName || '',
+      resaler_address: this.retailBuyerAddress || '',
+      resaler_phone: this.retailBuyerPhone || ''
     };
    console.log('cart',saleData)
     this.apiService.processSale(saleData).subscribe({
@@ -819,7 +834,9 @@ export class POSComponent implements OnInit {
       sale_price: this.cartTotal,
       discount: this.discountAmount,
       payment_method: 'cash',
-      sold_to: this.retailBuyerName || ''
+      sold_to: this.retailBuyerName || '',
+      resaler_address: this.retailBuyerAddress || '',
+      resaler_phone: this.retailBuyerPhone || ''
     };
     console.log('cart1',saleData)
     this.apiService.updateSale(this.editingSaleId, saleData).subscribe({
@@ -850,7 +867,7 @@ export class POSComponent implements OnInit {
 
     this.notificationService.success(message);
     this.cart = [];
-    this.discountPercent = 0;
+    this.discountInput = 0;
     this.discountAmount = 0;
     this.updateCartTotal();
     this.resetEditMode();
@@ -864,9 +881,7 @@ export class POSComponent implements OnInit {
       return;
     }
 
-    const plainReceiptText = (printElement?.innerText || '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+    const plainReceiptText = this.buildAlignedReceiptText58mm();
 
     const printedByNativePrinter = await this.sunmiPrinterService.printText(plainReceiptText);
     if (printedByNativePrinter) {
@@ -875,8 +890,8 @@ export class POSComponent implements OnInit {
     }
     
     if (this.sunmiPrinterService.isNativeAndroid()) {
-
-      this.notificationService.error('Native printer is not available.');
+      this.downloadReceiptTextFile(plainReceiptText);
+      this.notificationService.warning('Printer unavailable. Receipt downloaded.');
       return;
     }
 
@@ -941,4 +956,121 @@ export class POSComponent implements OnInit {
     }, 300);
   }
 
+  private buildAlignedReceiptText58mm(): string {
+    const lineWidth = 38;
+    const hr = '-'.repeat(lineWidth);
+    const items = (this.lastSaleItems || []) as Array<any>;
+    const saleDate = this.currentDate || new Date();
+    const buyer = (this.retailBuyerName || 'Retail Buyer').toString();
+    const address = (this.retailBuyerAddress || '-').toString();
+    const phone = (this.retailBuyerPhone || '-').toString();
+
+    const lines: string[] = [];
+    lines.push('.');
+    lines.push(this.centerText('Nick Electro Co.', lineWidth));
+    lines.push(this.centerText('Sales Receipt', lineWidth));
+    lines.push(hr);
+    lines.push(`Buyer: ${buyer}`);
+    lines.push(`Address: ${address}`);
+    lines.push(`Phone: ${phone}`);
+    lines.push(`Order Date: ${this.formatDateTimeForReceipt(saleDate)}`);
+    lines.push(hr);
+    lines.push(this.padRight('Item', 16) + this.padLeft('Qty', 4) + this.padLeft('Rate', 6) + this.padLeft('Fr', 4) + this.padLeft('Amt', 8));
+    lines.push(hr);
+
+    for (const item of items) {
+      const name = (item?.name || 'Item').toString().trim();
+      const qty = Number(item?.quantity || 0);
+      const freeQty = Number(item?.free_item || 0);
+      const rate = Number(item?.sale_price || 0);
+      const amount = qty * rate;
+      const wrappedName = this.wrapTextByWidth(name, 16);
+
+      wrappedName.forEach((part, idx) => {
+        if (idx === 0) {
+          lines.push(
+            this.padRight(part, 16) +
+            this.padLeft(String(qty), 4) +
+            this.padLeft(this.formatCompactMoney(rate), 6) +
+            this.padLeft(String(freeQty), 4) +
+            this.padLeft(this.formatCompactMoney(amount), 8)
+          );
+        } else {
+          lines.push(this.padRight(part, 16));
+        }
+      });
+      lines.push(hr);
+    }
+
+    lines.push(this.padRight('Subtotal', 24) + this.padLeft(this.formatCompactMoney(this.lastSubtotal), 14));
+    lines.push(this.padRight('Discount', 24) + this.padLeft(this.formatCompactMoney(this.lastDiscount), 14));
+    lines.push(this.padRight('Total', 24) + this.padLeft(this.formatCompactMoney(this.lastTotal), 14));
+    lines.push(hr);
+    lines.push(this.centerText('Thank you', lineWidth));
+    lines.push('.');
+    lines.push('');
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  private wrapTextByWidth(text: string, width: number): string[] {
+    if (!text) return [''];
+    const words = text.split(/\s+/).filter(Boolean);
+    if (!words.length) return [''];
+    const lines: string[] = [];
+    let current = '';
+    for (const word of words) {
+      if (!current) {
+        current = word;
+      } else if (`${current} ${word}`.length <= width) {
+        current = `${current} ${word}`;
+      } else {
+        lines.push(current);
+        current = word;
+      }
+    }
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  private centerText(text: string, width: number): string {
+    const cleaned = text.slice(0, width);
+    const left = Math.max(0, Math.floor((width - cleaned.length) / 2));
+    return `${' '.repeat(left)}${cleaned}`;
+  }
+
+  private padRight(text: string, width: number): string {
+    return text.length >= width ? text.slice(0, width) : text + ' '.repeat(width - text.length);
+  }
+
+  private padLeft(text: string, width: number): string {
+    return text.length >= width ? text.slice(text.length - width) : ' '.repeat(width - text.length) + text;
+  }
+
+  private formatCompactMoney(value: number): string {
+    return Number(value || 0).toFixed(0);
+  }
+
+  private formatDateTimeForReceipt(input: any): string {
+    const date = new Date(input);
+    if (Number.isNaN(date.getTime())) return '-';
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  private downloadReceiptTextFile(text: string): void {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const fileName = `receipt-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.txt`;
+    const blob = new Blob([text.endsWith('\n') ? text : `${text}\n`], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 }

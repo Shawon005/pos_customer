@@ -14,7 +14,7 @@ export class LocationService {
   public location$ = this.locationSubject.asObservable();
 
   private trackingSubscription: Subscription | null = null;
-  private readonly TRACKING_INTERVAL = 3 * 60 * 1000; // 3 minutes
+  private readonly TRACKING_INTERVAL =  20 * 1000; // 20 seconds
   private readonly QUICK_LOCATION_OPTIONS: PositionOptions = {
     enableHighAccuracy: false,
     timeout: 10000,

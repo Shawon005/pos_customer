@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../../core/services/api.service';
 import { NotificationService } from '../../../core/services/notification.service';
+
 
 @Component({
   selector: 'app-reports',
@@ -14,82 +15,72 @@ import { NotificationService } from '../../../core/services/notification.service
       </header>
 
       <div class="content">
-        <!-- Daily Sales Card -->
         <div class="report-card">
           <div class="report-header">
-            <h3>📅 Daily Sales</h3>
+            <h3>Daily Sales</h3>
           </div>
           <div class="report-data">
             <div class="data-item">
               <span class="label">Today's Sales:</span>
-              <span class="value">৳ 0.00</span>
+              <span class="value">{{ reportData.total_daily_sales | number:'1.2-2' }}</span>
             </div>
             <div class="data-item">
               <span class="label">Transactions:</span>
               <span class="value">0</span>
             </div>
           </div>
-          <button class="btn-view">View Details →</button>
+          <button class="btn-view">View Details</button>
         </div>
 
-        <!-- Weekly Sales Card -->
         <div class="report-card">
           <div class="report-header">
-            <h3>📊 Weekly Sales</h3>
+            <h3>Weekly Sales</h3>
           </div>
           <div class="report-data">
             <div class="data-item">
               <span class="label">This Week:</span>
-              <span class="value">৳ 0.00</span>
+              <span class="value">{{ reportData.total_weekly_sales | number:'1.2-2' }}</span>
             </div>
             <div class="data-item">
               <span class="label">Avg/Day:</span>
-              <span class="value">৳ 0.00</span>
+              <span class="value">0.00</span>
             </div>
           </div>
-          <button class="btn-view">View Details →</button>
+          <button class="btn-view">View Details</button>
         </div>
 
-        <!-- Monthly Sales Card -->
         <div class="report-card">
           <div class="report-header">
-            <h3>📈 Monthly Sales</h3>
+            <h3>Monthly Sales</h3>
           </div>
           <div class="report-data">
             <div class="data-item">
               <span class="label">This Month:</span>
-              <span class="value">৳ 0.00</span>
+              <span class="value">{{ reportData.total_monthly_sales | number:'1.2-2' }}</span>
             </div>
             <div class="data-item">
               <span class="label">Avg/Day:</span>
-              <span class="value">৳ 0.00</span>
+              <span class="value">0.00</span>
             </div>
           </div>
-          <button class="btn-view">View Details →</button>
+          <button class="btn-view">View Details</button>
         </div>
 
-        <!-- Profit Report Card -->
         <div class="report-card">
           <div class="report-header">
-            <h3>💰 Profit Report</h3>
+            <h3>Profit Report</h3>
           </div>
           <div class="report-data">
             <div class="data-item">
               <span class="label">Total Profit:</span>
-              <span class="value profit">৳ 0.00</span>
+              <span class="value profit">0.00</span>
             </div>
             <div class="data-item">
               <span class="label">Profit Margin:</span>
               <span class="value">0%</span>
             </div>
           </div>
-          <button class="btn-view">View Details →</button>
-        </div>
-
-        <!-- Chart Integration Notice -->
-        <div class="info-card">
-          <p class="info-icon">📊</p>
-          <p class="info-text">Charts visualization coming soon with ng2-charts integration</p>
+          <button class="btn-view">View Details</button>
         </div>
       </div>
     </div>
@@ -187,28 +178,6 @@ import { NotificationService } from '../../../core/services/notification.service
       background: #e8eaf6;
     }
 
-    .info-card {
-      background: #f0f9ff;
-      border: 2px solid #3498db;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .info-icon {
-      font-size: 48px;
-      margin: 0 0 12px 0;
-      display: block;
-    }
-
-    .info-text {
-      margin: 0;
-      color: #3498db;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
     @media (max-width: 480px) {
       .reports-page {
         padding: 12px;
@@ -221,12 +190,49 @@ import { NotificationService } from '../../../core/services/notification.service
   `]
 })
 export class ReportsComponent implements OnInit {
+  reportData = {
+    total_daily_sales: 0,
+    total_weekly_sales: 0,
+    total_monthly_sales: 0
+  };
+
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    // Reports will be populated from API
+   ngOnInit(): void {
+    this.loadAppReport();
+    setTimeout(() => { 
+       console.log('ReportsComponent initialized', this.reportData);
+     }, 2000);
+    
+   
+  }
+
+  private  loadAppReport(): void {
+     this.apiService.getAppReport().subscribe({
+      next: (response: any) => {
+        const payload = response?.data ?? response?.result?.data ?? response ?? {};
+
+        this.reportData = {
+          total_daily_sales: this.toNumber(payload?.total_daily_sales),
+          total_weekly_sales: this.toNumber(payload?.total_weekly_sales),
+          total_monthly_sales: this.toNumber(payload?.total_monthly_sales)
+        };
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notificationService.error('Failed to load report data');
+      }
+    });
+  }
+
+  private toNumber(value: unknown): number {
+    if (value === null || value === undefined) return 0;
+    const normalized = typeof value === 'string' ? value.replace(/,/g, '').trim() : value;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 }

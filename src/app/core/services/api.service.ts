@@ -82,12 +82,33 @@ export class ApiService {
 
   // POS endpoints
   processSale(data: {
-    items: Array<{ product_id: number; quantity: number }>;
+    items: Array<{  quantity: number; free_item?: number; sale_price?: number; name?: string }>;
     discount: number;
     payment_method: string;
+    sold_to?: string;
+    sold_to_address?: string;
+    sold_to_phone?: string;
   }): Observable<Sale> {
     this.headers = this.getAuthHeaders();
-    return this.http.post<Sale>(`${environment.apiUrl}/customer/sale`, data, { headers: this.headers });
+    const normalizedPayload = {
+      ...data,
+      items: (data.items || []).map(item => ({
+        product_id:1,
+        quantity: item.quantity,
+        free_item: item.free_item ?? 0,
+        sale_price: item.sale_price,
+        name: item.name
+      }))
+    };
+
+    return this.http.post<Sale>(`${environment.apiUrl}/customer/sale`, normalizedPayload, { headers: this.headers }).pipe(
+      catchError(() =>
+        this.http.post<Sale>(`${environment.apiUrl}/customer/sales`, normalizedPayload, { headers: this.headers })
+      ),
+      catchError(() =>
+        this.http.post<Sale>(`${environment.apiUrl}/customer/pos/sell`, normalizedPayload, { headers: this.headers })
+      )
+    );
   }
 
   updateSale(id: number, data: any): Observable<Sale> {
@@ -170,6 +191,11 @@ export class ApiService {
     return this.http.get(`${environment.apiUrl}/customer/reports/profit`, {
       params: { date_from: dateFrom, date_to: dateTo }
     });
+  }
+
+  getAppReport(): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.get(`${environment.apiUrl}/customer/app-report`, { headers });
   }
 
   // Location endpoints

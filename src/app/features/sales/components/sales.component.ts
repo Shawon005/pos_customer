@@ -31,6 +31,24 @@ import { jsPDF } from 'jspdf';
               <input type="date" [(ngModel)]="dateTo" (change)="filterSales()" />
             </div>
           </div>
+          <div class="status-filters">
+            <button
+              type="button"
+              class="status-filter-btn"
+              [class.active]="selectedStatus === 'delivered'"
+              (click)="setStatusFilter('delivered')"
+            >
+              Delivered
+            </button>
+            <button
+              type="button"
+              class="status-filter-btn"
+              [class.active]="selectedStatus === 'pending'"
+              (click)="setStatusFilter('pending')"
+            >
+              Pending
+            </button>
+          </div>
         </div>
 
         <!-- Sales List -->
@@ -58,6 +76,14 @@ import { jsPDF } from 'jspdf';
             </div>
             <div class="sale-date" *ngIf="getSaleStatus(sale)=='delivered'">Delivered by: {{ sale.updated_at | date: 'MMM d, yyyy' }}</div>
             <div class="sale-details">
+              <div class="detail-row">
+                <span class="label">Subtotal:</span>
+                <span class="value">৳ {{ getSaleSubtotal(sale) | number: '1.0-2' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Discount:</span>
+                <span class="value">৳ {{ (sale.discount || 0) | number: '1.0-2' }}</span>
+              </div>
               <div class="detail-row">
                 <span class="label">Total Amount:</span>
                 <span class="value">৳ {{ sale.sale_price | number: '1.0-2' }}</span>
@@ -109,6 +135,14 @@ import { jsPDF } from 'jspdf';
           </div>
 
           <div class="modal-summary">
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <span>৳ {{ getSaleSubtotal(selectedSale) | number: '1.0-2' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Discount:</span>
+              <span>৳ {{ (selectedSale.discount || 0) | number: '1.0-2' }}</span>
+            </div>
             <div class="summary-row">
               <span>Total:</span>
               <span>৳ {{ selectedSale.sale_price | number: '1.0-2' }}</span>
@@ -248,6 +282,26 @@ import { jsPDF } from 'jspdf';
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+    .status-filters {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .status-filter-btn {
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      color: #555;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .status-filter-btn.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: #fff;
     }
 
     .empty-state {
@@ -571,6 +625,7 @@ export class SalesComponent implements OnInit {
   filteredSales: Sale[] = [];
   dateFrom = '';
   dateTo = '';
+  selectedStatus: 'delivered' | 'pending' = 'delivered';
   isLoading = false;
   selectedSale: Sale | null = null;
   temp: any;
@@ -603,7 +658,6 @@ export class SalesComponent implements OnInit {
     }
 
     const plainReceiptText = this.buildAlignedReceiptText58mm();
-    this.downloadReceiptFiles(plainReceiptText);
 
     const printedByNativePrinter = await this.sunmiPrinterService.printText(plainReceiptText);
     console.log('print',)
@@ -613,7 +667,8 @@ export class SalesComponent implements OnInit {
     }
     console.log('native',this.sunmiPrinterService.isNativeAndroid())
     if (this.sunmiPrinterService.isNativeAndroid()) {
-      this.notificationService.error('Native printer is not available.');
+      this.downloadReceiptFiles(plainReceiptText);
+      this.notificationService.warning('Printer unavailable. Receipt downloaded.');
       return;
     }
 
@@ -628,21 +683,19 @@ export class SalesComponent implements OnInit {
               hr { margin: 6px 0; }
               h2, h3 { text-align: center; margin: 5px 0; }
               table {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
+                font-family: Arial, Helvetica, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+              }
 
-td, th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
+              td, th {
+                border: 1px solid #ddd;
+                padding: 8px;
+              }
 
-tr:nth-child(even){background-color: #f2f2f2;}
+              tr:nth-child(even){background-color: #f2f2f2;}
 
-tr:hover {background-color: #ddd;}
-
-
+              tr:hover {background-color: #ddd;}
             </style>
           </head>
           <body>
@@ -746,49 +799,59 @@ tr:hover {background-color: #ddd;}
     const hr = '-'.repeat(lineWidth);
     const items = (this.selectedSale?.items || this.lastSaleItems || []) as Array<any>;
     const buyer = (this.resaleer || this.selectedSale?.sold_to || 'Retail Customer').toString();
+    const address = (this.selectedSale?.resaler_address || '-').toString();
+    const phone = (this.selectedSale?.resaler_phone || '-').toString();
     const saleDate = this.selectedSale?.created_at || this.currentDate || new Date().toISOString();
+    const deliveryDate = this.selectedSale?.updated_at || saleDate;
 
     const subtotal = this.lastSubtotal || ((this.selectedSale?.sale_price || 0) + (this.selectedSale?.discount || 0));
     const discount = this.lastDiscount || (this.selectedSale?.discount || 0);
     const total = this.lastTotal || (this.selectedSale?.sale_price || 0);
 
     const lines: string[] = [];
+    lines.push('.');
     lines.push(this.centerText('Nick Electro Co.', lineWidth));
     lines.push(this.centerText('Sales Receipt', lineWidth));
     lines.push(hr);
-    lines.push(`Date: ${this.formatDateTimeForReceipt(saleDate)}`);
     lines.push(`Buyer: ${buyer}`);
+    lines.push(`Address: ${address}`);
+    lines.push(`Phone: ${phone}`);
+    lines.push(`Order Date: ${this.formatDateTimeForReceipt(saleDate)}`);
+    lines.push(`Delivery : ${this.formatDateTimeForReceipt(deliveryDate)}`);
     lines.push(hr);
-    lines.push(this.padRight('Item', 17) + this.padLeft('Qty', 4) + this.padLeft('Rate', 8) + this.padLeft('Amt', 9));
+    lines.push(this.padRight('Item', 16) + this.padLeft('Qty', 4) + this.padLeft('Rate', 6) + this.padLeft('Fr', 4) + this.padLeft('Amt', 8));
     lines.push(hr);
 
     for (const item of items) {
       const name = (item?.name || item?.product_name || 'Item').toString().trim();
       const qty = Number(item?.quantity || 0);
+      const freeQty = Number(item?.free_item || 0);
       const rate = Number(item?.sale_price || item?.price || 0);
       const amount = qty * rate;
-      const wrappedName = this.wrapTextByWidth(name, 17);
+      const wrappedName = this.wrapTextByWidth(name, 16);
 
       wrappedName.forEach((part, idx) => {
         if (idx === 0) {
           lines.push(
-            this.padRight(part, 17) +
+            this.padRight(part, 16) +
             this.padLeft(String(qty), 4) +
-            this.padLeft(this.formatCompactMoney(rate), 8) +
-            this.padLeft(this.formatCompactMoney(amount), 9)
+            this.padLeft(this.formatCompactMoney(rate), 6) +
+            this.padLeft(String(freeQty), 4) +
+            this.padLeft(this.formatCompactMoney(amount), 8)
           );
         } else {
-          lines.push(this.padRight(part, 17));
+          lines.push(this.padRight(part, 16));
         }
       });
+      lines.push(hr);
     }
 
-    lines.push(hr);
     lines.push(this.padRight('Subtotal', 24) + this.padLeft(this.formatCompactMoney(subtotal), 14));
     lines.push(this.padRight('Discount', 24) + this.padLeft(this.formatCompactMoney(discount), 14));
     lines.push(this.padRight('Total', 24) + this.padLeft(this.formatCompactMoney(total), 14));
     lines.push(hr);
     lines.push(this.centerText('Thank you', lineWidth));
+    lines.push('.');
     lines.push('');
     lines.push('');
     return lines.join('\n');
@@ -870,18 +933,21 @@ tr:hover {background-color: #ddd;}
 
   filterSales(): void {
     this.isLoading = false;
-    this.dateFrom, this.dateTo
     console.log('Filtering sales from:', this.dateFrom, 'to:', this.dateTo);
     this.filteredSales = this.sales.filter(sale => {
       const saleDate = new Date(sale.created_at);
       saleDate.setHours(0, 0, 0, 0); // Normalize to start of day
       const fromDate = this.dateFrom ? new Date(this.dateFrom) : null;
       const toDate = this.dateTo ? new Date(this.dateTo) : null;
+      const normalizedStatus = this.getSaleStatus(sale);
       console.log('Sale date:', fromDate && saleDate < fromDate, 'From date:', toDate && saleDate > toDate, 'Sale:', saleDate);
       if (fromDate && saleDate < fromDate) {
         return false;
       }
       if (toDate && saleDate > toDate) {
+        return false;
+      }
+      if (this.selectedStatus && normalizedStatus !== this.selectedStatus) {
         return false;
       }
       return true;
@@ -900,14 +966,29 @@ tr:hover {background-color: #ddd;}
     // });
   }
 
-  getSaleStatus(sale: Sale): string {
-    return ((sale as any)?.status || 'delivered').toString().toLowerCase();
+  setStatusFilter(status: 'delivered' | 'pending'): void {
+    this.selectedStatus = status;
+    this.filterSales();
+  }
+
+  getSaleStatus(sale: Sale): 'delivered' | 'pending' {
+    const status = ((sale as any)?.status || '').toString().toLowerCase().trim();
+    return status === 'delivered' ? 'delivered' : 'pending';
+  }
+
+  getSaleSubtotal(sale: Sale | null): number {
+    if (!sale) {
+      return 0;
+    }
+    return Number(sale.sale_price || 0) + Number(sale.discount || 0);
   }
 
   editSale(sale: Sale): void {
     const editPayload = {
       id: sale.id,
       sold_to: sale.sold_to || '',
+      resaler_address: sale.resaler_address || '',
+      resaler_phone: sale.resaler_phone || '',
       discount: sale.discount || 0,
       sale_price: sale.sale_price || 0,
       items: (sale.items || []).map((item: any) => ({
@@ -925,7 +1006,7 @@ tr:hover {background-color: #ddd;}
   openStatusPopup(sale: Sale): void {
     this.popupSale = sale;
     this.popupMode = 'status';
-    this.nextStatus = this.getSaleStatus(sale) === 'orderd' ? 'delivered' : 'delivered';
+    this.nextStatus = this.getSaleStatus(sale) === 'pending' ? 'delivered' : 'pending';
   }
 
   openDeletePopup(sale: Sale): void {
