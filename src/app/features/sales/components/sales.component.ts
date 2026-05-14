@@ -989,6 +989,7 @@ export class SalesComponent implements OnInit {
       sold_to: sale.sold_to || '',
       resaler_address: sale.resaler_address || '',
       resaler_phone: sale.resaler_phone || '',
+      resaler_google_location: (sale as any).resaler_google_location || '',
       discount: sale.discount || 0,
       sale_price: sale.sale_price || 0,
       items: (sale.items || []).map((item: any) => ({

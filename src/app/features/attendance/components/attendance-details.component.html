@@ -23,11 +23,11 @@
       <div class="summary-card"><span>Worked Hours</span><strong>{{ summary.worked_hours }}</strong></div>
       <div class="summary-card"><span>Late Hours</span><strong>{{ summary.late_hours }}</strong></div>
       <div class="summary-card"><span>Overtime Hours</span><strong>{{ summary.overtime_hours }}</strong></div>
-      <div class="summary-card"><span>Base Salary</span><strong>{{ formatter.toCurrency(summary.base_salary) }}</strong></div>
-      <div class="summary-card"><span>Late Deduction</span><strong>{{ formatter.toCurrency(summary.late_deduction) }}</strong></div>
-      <div class="summary-card"><span>Overtime Pay</span><strong>{{ formatter.toCurrency(summary.overtime_pay) }}</strong></div>
-      <div class="summary-card"><span>Total Salary</span><strong>{{ formatter.toCurrency(summary.total_salary) }}</strong></div>
-      <div class="summary-card full"><span>Attendance Location</span><strong>{{ summary.attendance_location }}</strong></div>
+      <div class="summary-card"><span>Base Salary</span><strong>{{ formatter.toCurrency(summary.salary.base_salary) }}</strong></div>
+      <div class="summary-card"><span>Absent/Late Deduction</span><strong>{{ formatter.toCurrency((summary.salary.late_deduction + summary.salary.absent_deduction)) }}</strong></div>
+      <div class="summary-card"><span>Overtime Pay</span><strong>{{ formatter.toCurrency(summary.salary.overtime_pay) }}</strong></div>
+      <div class="summary-card"><span>Total Salary</span><strong>{{ formatter.toCurrency(summary.salary.total_salary) }}</strong></div>
+      <div class="summary-card full"><span>Attendance Location</span><strong>{{ today_work_location_name }}</strong></div>
     </div>
 
     <div *ngIf="rows.length === 0" class="empty-state">No attendance records found for this month.</div>

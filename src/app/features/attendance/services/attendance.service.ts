@@ -17,15 +17,20 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   AttendanceApiResponse,
+  CreateLeaveRequestPayload,
+  CreateLeaveRequestResponse,
   AttendanceDetailsResponse,
   AttendanceQueueItem,
   AttendanceRecord,
-  AttendanceSubmitRequest
+  AttendanceSubmitRequest,
+  LeaveRequestListResponse,
+  LeaveRequestStatus
 } from '../models/attendance.model';
 
 @Injectable({ providedIn: 'root' })
 export class AttendanceService {
   private readonly baseUrl = `${environment.apiUrl}/customer/attendance`;
+  private readonly leaveRequestUrl = `${environment.apiUrl}/customer/leave-requests`;
   private readonly queueStorageKey = 'attendance_queue_v1';
   private readonly requestTimeoutMs = 20000;
   private readonly syncStatusSubject = new Subject<void>();
@@ -49,6 +54,20 @@ export class AttendanceService {
     const params = new HttpParams().set('month', month);
     return this.http
       .get<AttendanceDetailsResponse>(`${this.baseUrl}/details`, { headers: this.getAuthHeaders(), params })
+      .pipe(timeout(this.requestTimeoutMs), catchError((error) => this.handleHttpError(error)));
+  }
+
+  createLeaveRequest(payload: CreateLeaveRequestPayload): Observable<CreateLeaveRequestResponse> {
+    return this.http
+      .post<CreateLeaveRequestResponse>(this.leaveRequestUrl, payload, { headers: this.getAuthHeaders() })
+      .pipe(timeout(this.requestTimeoutMs), catchError((error) => this.handleHttpError(error)));
+  }
+
+  getLeaveRequests(status?: LeaveRequestStatus): Observable<LeaveRequestListResponse> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    return this.http
+      .get<LeaveRequestListResponse>(this.leaveRequestUrl, { headers: this.getAuthHeaders(), params })
       .pipe(timeout(this.requestTimeoutMs), catchError((error) => this.handleHttpError(error)));
   }
 

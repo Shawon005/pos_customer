@@ -24,6 +24,7 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceApiResponse {
+  success?: boolean;
   message: string;
   data?: AttendanceRecord;
 }
@@ -38,11 +39,14 @@ export interface AttendanceSummary {
   overtime_pay: number;
   total_salary: number;
   attendance_location: string;
+  salary: any;
+  today_work_location_name: string;
 }
 
 export interface AttendanceDetailsResponse {
   message?: string;
   data: {
+    today_work_location_name: string;
     summary: AttendanceSummary;
     records: AttendanceRecord[];
   };
@@ -52,4 +56,41 @@ export interface AttendanceQueueItem {
   id: string;
   payload: AttendanceSubmitRequest;
   queued_at: string;
+}
+
+export type LeaveRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface CreateLeaveRequestPayload {
+  from_date: string;
+  to_date: string;
+  reason: string;
+}
+
+export interface LeaveRequestItem {
+  id: number;
+  from_date: string;
+  to_date: string;
+  days_count: number;
+  reason: string;
+  status: LeaveRequestStatus;
+  admin_note: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface CreateLeaveRequestResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    status: LeaveRequestStatus;
+    from_date: string;
+    to_date: string;
+    days_count: number;
+  };
+}
+
+export interface LeaveRequestListResponse {
+  success: boolean;
+  data: LeaveRequestItem[];
 }

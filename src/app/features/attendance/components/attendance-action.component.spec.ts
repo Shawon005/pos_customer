@@ -12,7 +12,16 @@ describe('AttendanceActionComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [AttendanceActionComponent],
       providers: [
-        { provide: AttendanceService, useValue: { getQueuedAttendance: () => [], submitAttendance: () => of({ message: 'ok' }), syncStatus$: of(null) } },
+        {
+          provide: AttendanceService,
+          useValue: {
+            getQueuedAttendance: () => [],
+            submitAttendance: () => of({ message: 'ok' }),
+            createLeaveRequest: () => of({ success: true, message: 'ok' }),
+            getLeaveRequests: () => of({ success: true, data: [] }),
+            syncStatus$: of(null)
+          }
+        },
         { provide: NotificationService, useValue: { success: () => {}, error: () => {}, warning: () => {} } }
       ]
     }).compileComponents();

@@ -13,7 +13,7 @@ import { NotificationService } from '../../../core/services/notification.service
     <div class="login-container">
       <div class="login-card">
         <div class="login-header">
-          <img src="b_icon.jpeg" alt="" width="200">
+          <img src="Nick_en_Logo_V3.png" alt="" width="200">
           <p>Inventory & Sales Management</p>
         </div>
 
@@ -75,12 +75,14 @@ import { NotificationService } from '../../../core/services/notification.service
     }
 
     .login-card {
-      background: white;
+      background: black;
       border-radius: 16px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
       padding: 40px;
       width: 100%;
       max-width: 400px;
+      border: 1px solid #f7941d;
+      color: #fff;
     }
 
     .login-header {
@@ -109,7 +111,7 @@ import { NotificationService } from '../../../core/services/notification.service
       display: block;
       margin-bottom: 8px;
       font-weight: 600;
-      color: #333;
+      color: #fcfcfc;
       font-size: 14px;
     }
 

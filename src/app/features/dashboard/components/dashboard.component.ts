@@ -30,18 +30,19 @@ import { Customer } from '../../../core/models/auth.model';
         <a routerLink="/sales" class="tile"><span>📋</span><b>Sales History</b></a>
         <a routerLink="/reports" class="tile"><span>📊</span><b>Report</b></a>
         <a routerLink="/profile" class="tile"><span>👷🏻‍♂️</span><b>Profile</b></a>
-         <a routerLink="/login" class="tile"><span>🔒</span><b>Logout</b></a>
+        <a routerLink="/shop-owners" class="tile"><span>🏬</span><b>Shop</b></a>
+        <!-- <a routerLink="/login" class="tile"><span>🔒</span><b>Logout</b></a> -->
       </div>
 
       <div class="summary-strip">
-        <div class="mini"><small>📦 Stock</small><strong>{{ stats?.total_stock_items || 0 }}</strong></div>
-        <div class="mini"><small>💰 Today</small><strong> {{ stats?.today_sales || 0 }}৳</strong></div>
-        <div class="mini"><small>💰 Stock Value</small><strong> {{ stats?.total_stock_value || 0 }}৳</strong></div>
+        <div class="mini"><small>💰 Target</small><strong>{{ stats?.total_sale_target_amount || 0 }} ৳</strong></div>
+        <div class="mini"><small>💰 Today</small><strong> {{ stats?.today_sales || 0 }} ৳</strong></div>
+        <div class="mini"><small>💰 Total Sales</small><strong> {{ stats?.today_sales || 0 }} ৳</strong></div>
         <div class="mini low" *ngIf="stats?.low_stock_count"><small>⚠ Low</small><strong>{{ stats?.low_stock_count }}</strong></div>
       </div>
 
       <div class="location-card">
-        <div class="location-title">Current Location</div>
+        <div class="location-title">Area Name</div>
         <div class="location-value">{{ customer?.address || 'Location not set' }}</div>
       </div>
     </div>
@@ -53,8 +54,8 @@ import { Customer } from '../../../core/models/auth.model';
     .profile-info h2 { margin: 0; color: #fff; font-size: 26px; line-height: 1.1; }
     .profile-info p { margin: 4px 0 0; color: #bbb; font-size: 13px; }
     .tiles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .tile { background: #ededed; border-radius: 14px; min-height: 92px; text-decoration: none; color: #333; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.18); border: 1px solid #f7941d; }
-    .tile span { width: 34px; height: 34px; border-radius: 50%; background: #f7d6a8; color: #7f3f00; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .tile { background: #ff9f2d; border-radius: 14px; min-height: 92px; text-decoration: none; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.18); border: 1px solid #f7941d; }
+    .tile span { width: 34px; height: 34px; border-radius: 50%; background: #050505; color: #7f3f00; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
     .tile b { font-size: 15px; font-weight: 600; }
     .summary-strip { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .mini { border-radius: 12px; background: #292828; border: 1px solid #f7941d; padding: 10px; color: #fff; text-align: center; }

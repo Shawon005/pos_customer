@@ -28,9 +28,11 @@ export class AttendanceDetailsComponent implements OnInit {
     late_deduction: 0,
     overtime_pay: 0,
     total_salary: 0,
-    attendance_location: '-'
+    attendance_location: '-',
+    salary:{ },
+    today_work_location_name: '-'
   };
-
+  today_work_location_name: string = '-';
   constructor(private attendanceService: AttendanceService, private notificationService: NotificationService,private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -70,6 +72,7 @@ export class AttendanceDetailsComponent implements OnInit {
     this.attendanceService.getAttendanceDetails(this.month).subscribe({
       next: (response) => {
         this.summary = response.data?.summary || this.summary;
+        this.today_work_location_name = response.data?.today_work_location_name || '-';
         this.rows = this.attendanceService.mergeQueuedWithServer(response.data?.records || []);
         this.loading = false;
          this.cdr.detectChanges();

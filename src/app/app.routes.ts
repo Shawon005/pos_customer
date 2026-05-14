@@ -7,6 +7,7 @@ import { POSComponent } from './features/pos/components/pos.component';
 import { SalesComponent } from './features/sales/components/sales.component';
 import { ReportsComponent } from './features/reports/components/reports.component';
 import { ProfileComponent } from './features/profile/components/profile.component';
+import { ShopOwnersComponent } from './features/shop-owners/components/shop-owners.component';
 
 export const routes: Routes = [
   {
@@ -39,6 +40,11 @@ export const routes: Routes = [
   {
     path: 'reports',
     component: ReportsComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'shop-owners',
+    component: ShopOwnersComponent,
     canActivate: [AuthGuard]
   },
   {

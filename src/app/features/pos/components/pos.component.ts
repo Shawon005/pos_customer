@@ -7,6 +7,8 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ChangeDetectorRef } from '@angular/core';
 import { SunmiPrinterService } from '../../../core/services/sunmi-printer.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ShopOwnerService } from '../../../core/services/shop-owner.service';
+import { ShopOwner } from '../../../core/models/shop-owner.model';
 @Component({
   selector: 'app-pos',
   standalone: true,
@@ -51,13 +53,22 @@ import { ActivatedRoute, Router } from '@angular/router';
         <!-- Cart Section -->
         <div class="cart-section">
           <div>
-            <input type="text" placeholder="Retail Buyer Name..." [(ngModel)]="retailBuyerName"   class="search-input form_controll mb-4" style=""/>
+            <select [(ngModel)]="selectedShopOwnerId" (change)="onShopOwnerChange()" class="search-input form_controll mb-4" name="selectedShopOwnerId">
+              <option value="">Select Shop Owner (Optional)</option>
+              <option *ngFor="let owner of shopOwners" [value]="owner.id">{{ owner.name }}</option>
+            </select>
           </div>
           <div>
-            <input type="text" placeholder="Retail Address..." [(ngModel)]="retailBuyerAddress"   class="search-input form_controll mb-4" style=""/>
+            <input type="text" placeholder="Retail Buyer Name..." [(ngModel)]="retailBuyerName" class="search-input form_controll mb-4" />
           </div>
           <div>
-            <input type="text" placeholder="Retail Phone..." [(ngModel)]="retailBuyerPhone"   class="search-input form_controll mb-4" style=""/>
+            <input type="text" placeholder="Retail Address..." [(ngModel)]="retailBuyerAddress" class="search-input form_controll mb-4" />
+          </div>
+          <div>
+            <input type="text" placeholder="Retail Phone..." [(ngModel)]="retailBuyerPhone" class="search-input form_controll mb-4" />
+          </div>
+          <div>
+            <input type="text" placeholder="Google Location..." [(ngModel)]="retailBuyerGoogleLocation" class="search-input form_controll mb-4" />
           </div>
           <h2>Cart Items ({{ cart.length }})</h2>
 
@@ -522,6 +533,9 @@ export class POSComponent implements OnInit {
   retailBuyerName: string = '';
   retailBuyerAddress: string = '';
   retailBuyerPhone: string = '';
+  retailBuyerGoogleLocation: string = '';
+  selectedShopOwnerId: string = '';
+  shopOwners: ShopOwner[] = [];
   temp: any;
   lastSaleItems: any[] = [];
   lastSubtotal = 0;
@@ -537,12 +551,14 @@ export class POSComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private sunmiPrinterService: SunmiPrinterService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private shopOwnerService: ShopOwnerService
   ) {}
 
   ngOnInit(): void {
     const rawEditId = this.route.snapshot.queryParamMap.get('editSaleId');
     this.editSaleIdFromRoute = rawEditId ? Number(rawEditId) : null;
+    this.loadShopOwners();
     this.loadProducts();
   }
 
@@ -561,6 +577,24 @@ export class POSComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadShopOwners(): void {
+    this.shopOwners = this.shopOwnerService.getAll();
+  }
+
+  onShopOwnerChange(): void {
+    if (!this.selectedShopOwnerId) {
+      return;
+    }
+    const selectedOwner = this.shopOwners.find(owner => owner.id === this.selectedShopOwnerId);
+    if (!selectedOwner) {
+      return;
+    }
+    this.retailBuyerName = selectedOwner.name || '';
+    this.retailBuyerAddress = selectedOwner.address || '';
+    this.retailBuyerPhone = selectedOwner.phone || '';
+    this.retailBuyerGoogleLocation = selectedOwner.googleLocation || '';
   }
 
   onSearch(): void {
@@ -721,6 +755,7 @@ export class POSComponent implements OnInit {
       this.retailBuyerName = parsed.sold_to || '';
       this.retailBuyerAddress = parsed.resaler_address || '';
       this.retailBuyerPhone = parsed.resaler_phone || '';
+      this.retailBuyerGoogleLocation = parsed.resaler_google_location || '';
       this.discountAmount = Number(parsed.discount || 0);
       this.isEditMode = true;
       this.editingSaleId = Number(parsed.id);
@@ -740,6 +775,8 @@ export class POSComponent implements OnInit {
     this.retailBuyerName = '';
     this.retailBuyerAddress = '';
     this.retailBuyerPhone = '';
+    this.retailBuyerGoogleLocation = '';
+    this.selectedShopOwnerId = '';
     this.resetEditMode();
     this.updateCartTotal();
   }
@@ -799,7 +836,8 @@ export class POSComponent implements OnInit {
       payment_method: 'cash',
       sold_to: this.retailBuyerName || '',
       resaler_address: this.retailBuyerAddress || '',
-      resaler_phone: this.retailBuyerPhone || ''
+      resaler_phone: this.retailBuyerPhone || '',
+      resaler_google_location: this.retailBuyerGoogleLocation || ''
     };
    console.log('cart',saleData)
     this.apiService.processSale(saleData).subscribe({
@@ -836,7 +874,8 @@ export class POSComponent implements OnInit {
       payment_method: 'cash',
       sold_to: this.retailBuyerName || '',
       resaler_address: this.retailBuyerAddress || '',
-      resaler_phone: this.retailBuyerPhone || ''
+      resaler_phone: this.retailBuyerPhone || '',
+      resaler_google_location: this.retailBuyerGoogleLocation || ''
     };
     console.log('cart1',saleData)
     this.apiService.updateSale(this.editingSaleId, saleData).subscribe({
@@ -1074,3 +1113,4 @@ export class POSComponent implements OnInit {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
+

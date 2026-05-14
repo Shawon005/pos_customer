@@ -8,5 +8,52 @@
       <button class="btn in" (click)="submit('in')" [disabled]="loading">{{ loading ? 'Submitting...' : 'Check In' }}</button>
       <button class="btn out" (click)="submit('out')" [disabled]="loading">{{ loading ? 'Submitting...' : 'Check Out' }}</button>
     </div>
+    <div *ngIf="submitStatusMessage" class="submit-status" [ngClass]="'submit-status-' + submitStatusType">
+      {{ submitStatusMessage }}
+    </div>
+  </div>
+
+  <h2>Leave Request</h2>
+  <div class="action-card">
+    <div class="form-row">
+      <label for="fromDate">From Date</label>
+      <input id="fromDate" type="date" [(ngModel)]="leaveForm.from_date" />
+    </div>
+    <div class="form-row">
+      <label for="toDate">To Date</label>
+      <input id="toDate" type="date" [(ngModel)]="leaveForm.to_date" />
+    </div>
+    <div class="form-row">
+      <label for="leaveReason">Reason</label>
+      <textarea id="leaveReason" rows="3" [(ngModel)]="leaveForm.reason" placeholder="Why are you requesting leave?"></textarea>
+    </div>
+    <button class="btn leave" (click)="submitLeaveRequest()" [disabled]="leaveLoading">
+      {{ leaveLoading ? 'Submitting...' : 'Submit Leave Request' }}
+    </button>
+  </div>
+
+  <div class="action-card">
+    <div class="filter-row">
+      <h3 style="color:black">My Leave Requests</h3>
+      <select [(ngModel)]="leaveStatusFilter" (change)="loadLeaveRequests()">
+        <option value="">All</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div *ngIf="leaveListLoading" class="empty-note">Loading leave requests...</div>
+    <div *ngIf="!leaveListLoading && leaveRequests.length === 0" class="empty-note">No leave requests found.</div>
+
+    <div *ngFor="let item of leaveRequests; trackBy: trackByLeaveRequest" class="leave-item">
+      <div class="leave-top">
+        <strong>{{ item.from_date }} to {{ item.to_date }}</strong>
+        <span class="status-badge" [ngClass]="getStatusClass(item.status)">{{ item.status }}</span>
+      </div>
+      <div class="leave-meta">{{ item.days_count }} day(s)</div>
+      <div class="leave-reason">{{ item.reason }}</div>
+      <div *ngIf="item.admin_note" class="leave-note">Admin note: {{ item.admin_note }}</div>
+    </div>
   </div>
 </div>

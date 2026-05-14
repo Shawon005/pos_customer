@@ -1,5 +1,6 @@
 .attendance-action-page { padding: 16px; padding-bottom: 96px; background: #f6f8fa; min-height: 100vh; }
 h1 { margin: 0 0 14px; font-size: 24px; }
+h2 { margin: 20px 0 10px; font-size: 20px; }
 .status-card,.action-card { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px; }
 .preview { width: 100%; max-height: 220px; object-fit: cover; border-radius: 10px; margin: 10px 0; }
 .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -7,7 +8,34 @@ h1 { margin: 0 0 14px; font-size: 24px; }
 .btn.secondary { width: 100%; background: #e7ecf3; color: #1e2f42; }
 .btn.in { background: #138a56; color: #fff; }
 .btn.out { background: #bf360c; color: #fff; }
+.btn.leave { width: 100%; background: #0a66c2; color: #fff; margin-top: 8px; }
 .btn:disabled { opacity: 0.7; }
+.submit-status { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 13px; }
+.submit-status-success { background: #eaf8ef; color: #1e7a3d; border: 1px solid #bfe8cb; }
+.submit-status-error { background: #fdecec; color: #a13030; border: 1px solid #f6c4c4; }
+.submit-status-warning { background: #fff6e6; color: #8a6100; border: 1px solid #f2deae; }
 .mt-4{
     margin-top:24px;
 }
+.form-row { margin-bottom: 10px; }
+.form-row label { display: block; margin-bottom: 6px; font-weight: 600; color: #273240; font-size: 13px; }
+.form-row input,.form-row textarea,.filter-row select {
+  width: 100%;
+  border: 1px solid #ccd6e3;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.filter-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.filter-row h3 { margin: 0; font-size: 16px; }
+.leave-item { border: 1px solid #e5ebf2; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+.leave-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.status-badge { padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.status-pending { background: #fff4cc; color: #946200; }
+.status-approved { background: #dff5e6; color: #1b7a39; }
+.status-rejected { background: #fde5e5; color: #ac2d2d; }
+.leave-meta { font-size: 12px; color: #637487; margin-bottom: 4px; }
+.leave-reason,.leave-note { font-size: 13px; color: #273240; }
+.leave-note { margin-top: 5px; font-style: italic; }
+.empty-note { color: #687789; font-size: 14px; }

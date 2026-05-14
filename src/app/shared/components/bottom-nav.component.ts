@@ -38,8 +38,9 @@ export class BottomNavComponent implements OnInit {
     { label: 'Attendance', icon: '🕒', route: '/attendance/action' },
     { label: 'Stock', icon: '📦', route: '/stock' },
     { label: 'POS', icon: '🖥️', route: '/pos' },
+   
     { label: 'Sales', icon: '📋', route: '/sales' },
-    { label: 'Profile', icon: '👷🏻‍♂️', route: '/profile' }
+    { label: 'Profile', icon: '👤', route: '/profile' }
   ];
 
   constructor(private router: Router) {}

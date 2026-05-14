@@ -38,6 +38,7 @@ export interface Sale {
   sold_to: string;
   resaler_address?: string;
   resaler_phone?: string;
+  resaler_google_location?: string;
   status?: string;
   is_deleted?: boolean;
 }
@@ -60,6 +61,7 @@ export interface DashboardStats {
   total_stock_value: number;
   low_stock_count: number;
   today_sales: number;
+  total_sale_target_amount: number;
 }
 
 export interface SalesChartData {
